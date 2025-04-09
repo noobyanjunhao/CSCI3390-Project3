@@ -34,6 +34,7 @@ Apply `LubyMIS` locally on the graph files listed below and report the number of
 | twitter_100_edges.csv   |  3.11s    |2|
 | twitter_1000_edges.csv  |  3.81s     |3|
 | twitter_10000_edges.csv |  5.19s     |3|
+
 Trial 2
 |        Graph file       |  Runtime  | Number of Iteration|
 | ----------------------- |  -------- |--------------------|
