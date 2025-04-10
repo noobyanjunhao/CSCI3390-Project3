@@ -78,6 +78,107 @@ spark-submit --class project_3.main --master local[*] target/scala-2.12/project_
 // Unix
 spark-submit --class "project_3.main" --master "local[*]" target/scala-2.12/project_3_2.12-1.0.jar compute [path_to_input_graph] [path_for_output_graph]
 ```
+```scala
+  def LubyMIS(g_in: Graph[Int, Int]): (Graph[Int, Int], Int) = {
+    // Initialize all vertices with label=0 (undecided)
+    var g = g_in.mapVertices((vid, attr) => 0)
+
+    var activeVertices = g.vertices.filter { case (_, label) => label == 0 }.count()
+    var oldActiveVertices = -1L
+    var iterationCount = 0
+
+    // Start timing
+    val startTimeMillis = System.currentTimeMillis()
+
+    // Keep iterating while there are undecided vertices and progress is still being made
+    while (activeVertices > 0 && activeVertices != oldActiveVertices) {
+      iterationCount += 1
+
+      // Step (a): Generate a random value for each 0-labeled (undecided) vertex.
+      val randomValues: VertexRDD[Double] = g.vertices.mapValues { (vid, label) =>
+        if (label == 0) math.random else -1.0
+      }
+
+      // Join these random values into the graph as a new vertex property ( (oldLabel, randomValue) )
+      val g2 = g.outerJoinVertices(randomValues) {
+        case (_, currentLabel, randOpt) =>
+          (currentLabel, randOpt.getOrElse(-1.0))
+      }
+
+      // Step (b): Identify vertices that "win" among their neighbors
+      val maxNeighborRandom = g2.aggregateMessages[Double](
+        sendMsg = triplet => {
+          val (srcLabel, srcRand) = triplet.srcAttr
+          val (dstLabel, dstRand) = triplet.dstAttr
+
+          if (srcLabel == 0 && dstLabel == 0) {
+            triplet.sendToSrc(dstRand)
+            triplet.sendToDst(srcRand)
+          }
+        },
+        mergeMsg = (a, b) => math.max(a, b)
+      )
+
+      // Now decide: if a vertex's own random >= max neighbor random (and label=0), it "wins"
+      val newVertices = g2.vertices.leftJoin(maxNeighborRandom) {
+        case (vid, (oldLabel, myRand), maxRandOpt) =>
+          if (oldLabel != 0) {
+            oldLabel
+          } else {
+            val maxRand = maxRandOpt.getOrElse(-1.0)
+            if (myRand >= maxRand) 1 else 0
+          }
+      }
+
+      // Build a temporary graph with updated "winners"
+      var tempG = Graph(newVertices, g2.edges)
+
+      // Step (c): Any neighbor of a newly chosen MIS vertex is forced to label -1 if it was 0
+      val markNotInMIS = tempG.aggregateMessages[Boolean](
+        sendMsg = triplet => {
+          if (triplet.srcAttr == 1 && triplet.dstAttr == 0) {
+            triplet.sendToDst(true)
+          }
+          if (triplet.dstAttr == 1 && triplet.srcAttr == 0) {
+            triplet.sendToSrc(true)
+          }
+        },
+        mergeMsg = (a, b) => a || b
+      )
+
+      // Update labels: those informed become -1
+      val finalVertices = tempG.vertices.leftJoin(markNotInMIS) {
+        case (_, currentLabel, informedOpt) =>
+          if (currentLabel == 0 && informedOpt.getOrElse(false)) -1
+          else currentLabel
+      }
+
+      // Update the graph for the next iteration
+      g = Graph(finalVertices, tempG.edges)
+
+      // Count how many remain with label=0
+      oldActiveVertices = activeVertices
+      activeVertices = g.vertices.filter { case (_, label) => label == 0 }.count()
+
+      // Print the number of active vertices after each iteration
+      println(s"Iteration $iterationCount: Active vertices = $activeVertices")
+    }
+
+    // End timing
+    val endTimeMillis = System.currentTimeMillis()
+    val durationSeconds = (endTimeMillis - startTimeMillis) / 1000
+    println(s"Luby's algorithm completed in $durationSeconds seconds with $iterationCount iterations.")
+
+    // Final cleanup to ensure no leftover 0's remain
+    val cleanedVertices = g.vertices.mapValues { (_, label) =>
+      if (label == 0) 1 else label
+    }
+    val finalGraph = Graph(cleanedVertices, g.edges)
+
+    // Return both the final graph and the iteration count
+    (finalGraph, iterationCount)
+  }
+```
 Apply `LubyMIS` locally on the graph files listed below and report the number of iterations and running time that the MIS algorithm consumes for **each file**. You may need to include additional print statements in `LubyMIS` in order to acquire this information. Finally, verify your outputs with `verifyMIS`.
 |        Graph file       |  Runtime  | Number of Iteration|
 | ----------------------- |  -------- |--------------------|
