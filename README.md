@@ -50,7 +50,7 @@ Trial 2
 3. **(3 points)**  
 a. Run `LubyMIS` on `twitter_original_edges.csv` in GCP with 3x4 cores (vCPUs). Report the number of iterations, running time, and remaining active vertices (i.e. vertices whose status has yet to be determined) at the end of **each iteration**. You may need to include additional print statements in `LubyMIS` in order to acquire this information. Finally, verify your outputs with `verifyMIS`.
 
-# Luby's Algorithm Output Summary
+Luby's Algorithm Output Summary
 
 Below is the relevant output from the Spark job that ran Luby's algorithm on `twitter_original_edges.csv`:
 
