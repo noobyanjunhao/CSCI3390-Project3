@@ -8,6 +8,55 @@ spark-submit --class project_3.main --master local[*] target/scala-2.12/project_
 // Unix
 spark-submit --class "project_3.main" --master "local[*]" target/scala-2.12/project_3_2.12-1.0.jar verify [path_to_graph] [path_to_MIS]
 ```
+
+Implementation of `verifyMIS`
+```scala
+def verifyMIS(g_in: Graph[Int, Int]): Boolean = {
+    // 1) Check independence
+    //    If there's any edge where both endpoints have label 1, it fails.
+    val invalidEdgeCount = g_in.triplets.filter { trip =>
+      trip.srcAttr == 1 && trip.dstAttr == 1
+    }.count()
+    if (invalidEdgeCount > 0) {
+      return false
+    }
+
+    // 2) Check maximality
+    //    For every vertex with label -1, we require that it has at least one neighbor labeled 1.
+    //    If we find a -1-labeled vertex with no neighbor labeled 1, it fails.
+    val hasNeighborInMIS = g_in.aggregateMessages[Boolean](
+      triplet => {
+        // If src is in MIS and dst == -1, inform dst:
+        if (triplet.srcAttr == 1 && triplet.dstAttr == -1) {
+          triplet.sendToDst(true)
+        }
+        // If dst is in MIS and src == -1, inform src:
+        if (triplet.dstAttr == 1 && triplet.srcAttr == -1) {
+          triplet.sendToSrc(true)
+        }
+      },
+      // mergeMsg
+      (a, b) => a || b
+    )
+
+    // Now check if any -1 vertex hasNeighborInMIS == false
+    val problematicVertices = g_in.vertices.leftJoin(hasNeighborInMIS) {
+      case (_, label, maybeNeighborHas1) => (label, maybeNeighborHas1.getOrElse(false))
+    }.filter {
+      // Condition: label == -1 but no neighbor in MIS
+      case (_, (lbl, hasNeighbor)) => lbl == -1 && hasNeighbor == false
+    }.count()
+
+    if (problematicVertices > 0) {
+      // Fails maximality
+      return false
+    }
+
+    // If we pass both tests => valid MIS
+    true
+  }
+
+```
 Apply `verifyMIS` locally with the parameter combinations listed in the table below and **fill in all blanks**.
 |        Graph file       |           MIS file           | Is an MIS? |
 | ----------------------- | ---------------------------- | ---------- |
@@ -50,9 +99,22 @@ Trial 2
 3. **(3 points)**  
 a. Run `LubyMIS` on `twitter_original_edges.csv` in GCP with 3x4 cores (vCPUs). Report the number of iterations, running time, and remaining active vertices (i.e. vertices whose status has yet to be determined) at the end of **each iteration**. You may need to include additional print statements in `LubyMIS` in order to acquire this information. Finally, verify your outputs with `verifyMIS`.
 
-Luby's Algorithm Output Summary
+###Luby's Algorithm Output Summary
 
-Below is the relevant output from the Spark job that ran Luby's algorithm on `twitter_original_edges.csv`:
+**Cluster Configuration for 3x4 cores**
+
+```scala
+gcloud dataproc clusters create n2-3x4\
+    --region=us-central1 \
+    --master-machine-type=n2-standard-2 \
+    --worker-machine-type=n2-standard-4 \
+    --num-workers=3 \
+    --image-version=2.2-debian12 \
+    --max-idle=2h \
+    --enable-component-gateway \
+    --no-address
+```
+
 
 1. **Iterations and Active Vertices**
 
