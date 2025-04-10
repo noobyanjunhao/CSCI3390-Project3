@@ -268,7 +268,6 @@ gcloud dataproc clusters create my-cluster-4x2 \
 | 4             | 3                  |
 | 5             | 0                  |
 
-By **Iteration 5**, the number of undecided (active) vertices reached **0**, indicating the algorithm converged.
 
 2. **Timing**
 
@@ -277,7 +276,38 @@ By **Iteration 5**, the number of undecided (active) vertices reached **0**, ind
 - **Total Runtime (including I/O)**: 589.34 seconds  
   (This includes loading the input file, saving the output, and any overhead.)
 
-It is indeed a MIS, comfirmed by verify MIS function. 
+**Cluster Configuration for 2x2 cores**
+
+```
+gcloud dataproc clusters create my-cluster-2x2 \
+    --region=us-central1 \
+    --master-machine-type=n2-standard-2 \
+    --worker-machine-type=n2-standard-2 \
+    --num-workers=2 \
+    --image-version=2.2-debian12 \
+    --max-idle=2h \
+    --master-boot-disk-size=30 \
+    --worker-boot-disk-size=30
+```
+
+
+1. **Iterations and Active Vertices**
+
+| **Iteration** | **Active Vertices** |
+|---------------|---------------------|
+| 1             | 6,697,463          |
+| 2             | 39,301             |
+| 3             | 584                |
+| 4             | 23                 |
+| 5             | 0                  |
+
+2. **Timing**
+
+- **Algorithm Time**: 501 seconds  
+  (This is the duration spent inside the Luby’s MIS method.)
+- **Total Runtime (including I/O)**: 557.13 seconds  
+  (This includes loading the input file, saving the output, and any overhead.)
+
 
 ## Submission via GitHub
 Delete your project's current **README.md** file (the one you're reading right now) and include your report as a new **README.md** file in the project root directory. Have no fear—the README with the project description is always available for reading in the template repository you created your repository from. For more information on READMEs, feel free to visit [this page](https://docs.github.com/en/github/creating-cloning-and-archiving-repositories/about-readmes) in the GitHub Docs. You'll be writing in [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown). Be sure that your repository is up to date and you have pushed all changes you've made to the project's code. When you're ready to submit, simply provide the link to your repository in the Canvas assignment's submission.
