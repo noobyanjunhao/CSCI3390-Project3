@@ -206,7 +206,7 @@ a. Run `LubyMIS` on `twitter_original_edges.csv` in GCP with 3x4 cores (vCPUs). 
 
 **Cluster Configuration for 3x4 cores**
 
-```scala
+```
 gcloud dataproc clusters create n2-3x4\
     --region=us-central1 \
     --master-machine-type=n2-standard-2 \
