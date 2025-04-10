@@ -18,6 +18,9 @@ Apply `verifyMIS` locally with the parameter combinations listed in the table be
 | twitter_10000_edges.csv | twitter_10000_MIS_test_1.csv | No          |
 | twitter_10000_edges.csv | twitter_10000_MIS_test_2.csv | Yes          |
 
+
+
+
 2. **(3 points)** Implement the `LubyMIS` function. The function accepts a Graph[Int, Int] object as its input. You can ignore the two integers associated with the vertex RDD and the edge RDD as they are dummy fields. `LubyMIS` should return a Graph[Int, Int] object such that the integer in a vertex's data field denotes whether or not the vertex is in the MIS, with 1 signifying membership and -1 signifying non-membership. The output will be written as a CSV file to the output path you provide. To execute the function, run the following:
 ```
 // Linux
@@ -45,7 +48,34 @@ Trial 2
 | twitter_10000_edges.csv |  2.89s     |3|
 
 3. **(3 points)**  
-a. Run `LubyMIS` on `twitter_original_edges.csv` in GCP with 3x4 cores (vCPUs). Report the number of iterations, running time, and remaining active vertices (i.e. vertices whose status has yet to be determined) at the end of **each iteration**. You may need to include additional print statements in `LubyMIS` in order to acquire this information. Finally, verify your outputs with `verifyMIS`.  
+a. Run `LubyMIS` on `twitter_original_edges.csv` in GCP with 3x4 cores (vCPUs). Report the number of iterations, running time, and remaining active vertices (i.e. vertices whose status has yet to be determined) at the end of **each iteration**. You may need to include additional print statements in `LubyMIS` in order to acquire this information. Finally, verify your outputs with `verifyMIS`.
+
+# Luby's Algorithm Output Summary
+
+Below is the relevant output from the Spark job that ran Luby's algorithm on `twitter_original_edges.csv`:
+
+1. **Iterations and Active Vertices**
+
+| **Iteration** | **Active Vertices** |
+|---------------|---------------------|
+| 1             | 6,551,624          |
+| 2             | 34,433             |
+| 3             | 514                |
+| 4             | 6                  |
+| 5             | 0                  |
+
+By **Iteration 5**, the number of undecided (active) vertices reached **0**, indicating the algorithm converged.
+
+2. **Timing**
+
+- **Algorithm Time**: 262 seconds  
+  (This is the duration spent inside the Luby’s MIS method.)
+- **Total Runtime (including I/O)**: 293.70 seconds  
+  (This includes loading the input file, saving the output, and any overhead.)
+
+It is indeed a MIS, comfirmed by verify MIS function. 
+
+
 b. Run `LubyMIS` on `twitter_original_edges.csv` with 4x2 cores (vCPUs) and then 2x2 cores (vCPUs). Compare the running times between the 3 jobs with varying core specifications that you submitted in **3a** and **3b**.
 
 ## Submission via GitHub
