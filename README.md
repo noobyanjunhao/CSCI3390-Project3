@@ -180,6 +180,8 @@ spark-submit --class "project_3.main" --master "local[*]" target/scala-2.12/proj
   }
 ```
 Apply `LubyMIS` locally on the graph files listed below and report the number of iterations and running time that the MIS algorithm consumes for **each file**. You may need to include additional print statements in `LubyMIS` in order to acquire this information. Finally, verify your outputs with `verifyMIS`.
+
+Trial 1(6-Core Intel Core i7)
 |        Graph file       |  Runtime  | Number of Iteration|
 | ----------------------- |  -------- |--------------------|
 | small_edges.csv         |  2.40s    |1|
@@ -188,7 +190,7 @@ Apply `LubyMIS` locally on the graph files listed below and report the number of
 | twitter_1000_edges.csv  |  3.81s     |3|
 | twitter_10000_edges.csv |  5.19s     |3|
 
-Trial 2
+Trial 2 (m1)
 |        Graph file       |  Runtime  | Number of Iteration|
 | ----------------------- |  -------- |--------------------|
 | small_edges.csv         |  1.53s    |1|
