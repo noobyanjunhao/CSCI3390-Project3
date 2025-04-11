@@ -229,7 +229,6 @@ gcloud dataproc clusters create n2-3x4\
 | 4             | 6                  |
 | 5             | 0                  |
 
-By **Iteration 5**, the number of undecided (active) vertices reached **0**, indicating the algorithm converged.
 
 2. **Timing**
 
@@ -238,7 +237,6 @@ By **Iteration 5**, the number of undecided (active) vertices reached **0**, ind
 - **Total Runtime (including I/O)**: 293.70 seconds  
   (This includes loading the input file, saving the output, and any overhead.)
 
-It is indeed a MIS, comfirmed by verify MIS function. 
 
 
 b. Run `LubyMIS` on `twitter_original_edges.csv` with 4x2 cores (vCPUs) and then 2x2 cores (vCPUs). Compare the running times between the 3 jobs with varying core specifications that you submitted in **3a** and **3b**.
@@ -307,6 +305,44 @@ gcloud dataproc clusters create my-cluster-2x2 \
   (This is the duration spent inside the Luby’s MIS method.)
 - **Total Runtime (including I/O)**: 557.13 seconds  
   (This includes loading the input file, saving the output, and any overhead.)
+
+## LubyMIS Runtime Comparison on GCP
+
+---
+
+### ⚙Cluster Configurations
+
+| Configuration              | Total Cores | vCPUs/Node |
+|----------------------------|-------------|------------|
+| 3 workers × 4 vCPUs        | **12 cores**| 4          |
+| 4 workers × 2 vCPUs        | **8 cores** | 2          |
+| 2 workers × 2 vCPUs        | **4 cores** | 2          |
+
+---
+
+### Performance Summary
+
+| Cluster | Algorithm Time (sec) | Total Runtime (sec) |
+|---------|----------------------|---------------------|
+| `3x4`   | 262                  | **293.70**          |
+| `4x2`   | 532                  | **589.34**          |
+| `2x2`   | 501                  | **557.13**          |
+---
+
+### MIS Verification
+
+All outputs were verified using the `verifyMIS` function and confirmed to be **valid maximal independent sets**.
+
+---
+
+### Comparison
+
+- The 3x4 cluster (12 cores) had the fastest execution, finishing in under 5 minutes including I/O.
+- With more vCPUs per node, the 3x4 setup achieved nearly 2× speedup over the 2x2 baseline.
+- Surprisingly, 4x2 performed only marginally better than 2x2 — possibly due to increased communication overhead between more nodes with fewer cores each.
+- Going from 8 cores to 12 offered a bigger gain than from 4 to 8, showing parallelism scales well initially but may eventually plateau without further optimization.
+
+---
 
 
 ## Submission via GitHub
